@@ -1,7 +1,6 @@
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Slf4jReporter;
-import com.codahale.metrics.Timer;
+import com.codahale.metrics.*;
 import com.codahale.metrics.jmx.JmxReporter;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.spotify.apollo.Environment;
 import com.spotify.apollo.RequestContext;
 import com.spotify.apollo.Response;
@@ -10,11 +9,10 @@ import com.spotify.apollo.httpservice.LoadingException;
 import com.spotify.apollo.route.Route;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import static com.spotify.apollo.Status.BAD_REQUEST;
 import static com.spotify.apollo.Status.OK;
 
 public class Application {
@@ -30,8 +28,11 @@ public class Application {
                 .convertDurationsTo(TimeUnit.MILLISECONDS)
                 .build();
         reporter1.start(1, TimeUnit.SECONDS);
+
         final JmxReporter reporter = JmxReporter.forRegistry(metrics).build();
         reporter.start();
+
+        metrics.register("memory", new MemoryUsageGaugeSet());
         HttpService.boot(Application::init, "java-metrics", args);
     }
 
